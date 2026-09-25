@@ -154,7 +154,7 @@ try {
 assert.ok(deny.length > 20, `.leaklist only has ${deny.length} entries, which looks truncated`);
 // The check covers cv.json and both files generated from it, so it also catches a hand-edit of
 // a generator's output - not a second source of truth, a tripwire on the generators.
-for (const [name, body] of [["llms.txt", llms], ["data/cv.json", cvRaw], ["README.md", read("README.md")]]) {
+for (const [name, body] of [["llms.txt", llms], ["data/cv.json", cvRaw], ["PROFILE.md", read("PROFILE.md")]]) {
   for (const term of deny) {
     assert.ok(!body.toLowerCase().includes(term.toLowerCase()), `${name} leaks a withheld name: ${term}`);
   }
