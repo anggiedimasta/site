@@ -63,8 +63,19 @@ try {
     process.exit(1);
   }
   console.log(`\nverified ${staged.length} files, none untracked. running wrangler...\n`);
-  execFileSync("npx", ["--yes", "wrangler", "pages", "deploy", stage,
-    "--project-name", project, "--branch", branch], { stdio: "inherit" });
+  // A shell is unavoidable and that is worth being honest about. Node >= 18.20.2 refuses to
+  // spawn a .cmd with shell:false (the CVE-2024-27980 fix) and npx on Windows is a .cmd shim;
+  // the extensionless npx is a bash script, not JS, so it cannot be run by node either. The
+  // alternatives were a devDependency, which breaks the no-node_modules property this project
+  // is built on, or hand-assembling a path into the npx cache, which breaks on the next cache
+  // eviction. So: shell:true, with the arguments quoted here by hand. That is safe while every
+  // argument is a literal or a path this script generated, which is the case - see PROJECT and
+  // --preview above. Node prints a deprecation warning for it; the warning is the price.
+  const npx = process.platform === "win32" ? "npx.cmd" : "npx";
+  const args = ["--yes", "wrangler", "pages", "deploy", stage,
+    "--project-name", project, "--branch", branch, "--commit-dirty=true"];
+  const quoted = args.map((a) => (/[\s&|<>^"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a));
+  execFileSync(npx, quoted, { stdio: "inherit", shell: true });
 } finally {
   rmSync(stage, { recursive: true, force: true });
 }
