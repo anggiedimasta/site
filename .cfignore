@@ -1,0 +1,24 @@
+# Wrangler uploads the FOLDER, not the git tree. Anything present in the working directory
+# gets published unless it is excluded here, and .gitignore is not consulted. That is how a
+# source CV and the leak deny-list ended up on a public URL once already.
+#
+# Kept deliberately explicit. A blanket *.txt with a !llms.txt exception is shorter and has
+# one more thing to get right; test_sec.mjs fails if any file on disk is neither tracked by
+# git nor matched by a line below, so a new untracked file cannot slip through unreviewed.
+
+# the deny-list the leak checks read - it names what this project refuses to publish
+.leaklist
+
+# credentials
+.env
+.env.*
+
+# local tooling state
+.bench/
+.wrangler/
+node_modules/
+
+# source material, never part of the site
+*.pdf
+Profile*.txt
+Anggie*.txt

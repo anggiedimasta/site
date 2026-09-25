@@ -16,9 +16,9 @@ const html = htmlRaw.replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g
 const svg = read("favicon.svg");
 const llms = read("llms.txt");
 const cvRaw = read("data/cv.json");
-const shipped = [".gitignore", "README.md", "anggiedimasta.jpg", "data/cv.json",
-  "demo.mjs", "favicon.svg", "index.html", "llms.txt", "make_profile.mjs", "search.mjs",
-  "test_search.mjs", "test_sec.mjs", "test_view.mjs"];
+const shipped = [".cfignore", ".gitignore", "README.md", "PROFILE.md", "anggiedimasta.jpg",
+  "data/cv.json", "demo.mjs", "favicon.svg", "index.html", "llms.txt", "make_profile.mjs",
+  "search.mjs", "test_search.mjs", "test_sec.mjs", "test_view.mjs"];
 
 // ---- 1. zero third-party subresources. The site's whole claim is that it runs with no server
 // and no bill, which a single remote font or analytics tag would quietly break. Same-origin
@@ -52,6 +52,27 @@ const svgNoNs = svg.replace(/\sxmlns(:\w+)?\s*=\s*"[^"]*"/g, "").replace(/<!--[\
 assert.ok(!/https?:|\/\//.test(svgNoNs), `favicon.svg references an external URL: ${/https?:.*/.exec(svgNoNs)?.[0] ?? ""}`);
 assert.ok(!/<image\b|xlink:href|<use\b/i.test(svg), "favicon.svg must not reference or embed another file");
 assert.ok(!/\bon[a-z]+\s*=/i.test(svg), "favicon.svg carries an event handler");
+
+// A double dash inside an XML comment invalidates the whole file, and the only symptom is a
+// broken image in the tab bar - nothing anywhere reports an error. It happened once here
+// because a CSS custom-property name was written into a comment. Cheap to assert, so assert it.
+for (const c of svg.matchAll(/<!--([\s\S]*?)-->/g)) {
+  // the message has to survive the case it is reporting, so [\s\S] rather than .
+  const near = c[1].match(/[\s\S]{0,30}--[\s\S]{0,20}/);
+  assert.ok(!c[1].includes("--"), `favicon.svg has a double hyphen inside a comment: "${near ? near[0] : "--"}"`);
+}
+assert.ok(!svg.includes("Synthwave"), "favicon.svg still credits the palette it no longer uses");
+
+// Every dot is one 2x2 square, so every path segment has the identical shape. One segment was
+// hand-edited into "M34 10h2h-2z" - a zero-height rect that silently drops the dot.
+const segs = [...svg.matchAll(/M[\d.]+ [\d.]+(h|v|z|-?[\d.]+)+/g)].map((m) => m[0]);
+assert.ok(segs.length >= 90, `only ${segs.length} dot segments in the favicon, expected 98`);
+const odd = segs.filter((s) => !/^M[\d.]+ [\d.]+h2v2h-2z$/.test(s));
+assert.equal(odd.length, 0, `malformed dot segment(s): ${odd.slice(0, 3).join(", ")}`);
+// and the grid in the comment has to match the segments that were emitted from it
+const comment = [...svg.matchAll(/<!--([\s\S]*?)-->/g)].map((m) => m[1]).find((b) => b.includes("....."));
+const grid = (comment?.match(/[.#]{13}/g) || []).length;
+assert.equal(grid, 13, `the comment shows ${grid} grid rows, expected 13`);
 
 // every off-origin URL that remains has to be a link a human clicks
 for (const m of html.matchAll(/https?:\/\/[^\s"'<>)]+/g)) {
@@ -188,7 +209,47 @@ assert.ok(!readdirSync(".").includes("package.json"), "a package.json appeared, 
 assert.ok(!readdirSync(".").includes("package-lock.json"), "a lockfile appeared, so did a dependency tree");
 assert.ok(!readdirSync(".").includes("node_modules"), "node_modules exists, so did a dependency tree");
 
-// ---- 12. the things the site tells visitors must be true
+// ---- 12. wrangler uploads the FOLDER, not the git tree. .gitignore is not consulted, so
+// every file present in the working directory is published unless .cfignore excludes it. That
+// is how a source CV and the leak deny-list reached a public URL once. This is the check that
+// keeps it from happening again: nothing on disk may be untracked AND unexcluded.
+let cfignore;
+try {
+  cfignore = readFileSync(".cfignore", "utf8").split(/\r?\n/).map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+} catch {
+  assert.fail(".cfignore is missing, so `wrangler pages deploy .` would publish every untracked file in the folder");
+}
+// three shapes only, because that is all this file uses: a bare name, a directory, and *.ext
+const excluded = (rel) => cfignore.some((p) => {
+  if (p.startsWith("*.")) return rel.toLowerCase().endsWith(p.slice(1).toLowerCase());
+  if (p.endsWith("/")) return rel.toLowerCase().startsWith(p.toLowerCase());
+  if (p.includes("*")) return new RegExp(`^${p.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`, "i").test(rel);
+  return rel.toLowerCase() === p.toLowerCase();
+});
+
+const onDisk = [];
+(function walk(dir, prefix = "") {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === ".git") continue;
+    const rel = prefix ? `${prefix}/${e.name}` : e.name;
+    if (e.isDirectory()) walk(`${dir}/${e.name}`, rel);
+    else onDisk.push(rel);
+  }
+})(".");
+
+const leaks = onDisk.filter((f) => !shipped.includes(f) && !excluded(f));
+assert.equal(leaks.length, 0,
+  `on disk, not tracked by git, and not in .cfignore - a deploy would publish: ${leaks.join(", ")}`);
+const ignoredButShipped = shipped.filter((f) => excluded(f));
+assert.equal(ignoredButShipped.length, 0,
+  `.cfignore excludes a file that is meant to ship: ${ignoredButShipped.join(", ")}`);
+// and the two files that must never be reachable by name have to be named in .cfignore
+for (const must of [".leaklist", ".env"]) {
+  assert.ok(excluded(must), `${must} is not in .cfignore`);
+}
+
+// ---- 13. the things the site tells visitors must be true
 assert.ok(/no server, no model, no bill/.test(html) || /no model calls/i.test(html),
   "the console banner claim is gone");
 assert.ok(!/<script[^>]*>[^<]*\b(fetch|XMLHttpRequest)\s*\(\s*["']https?:/.test(html),

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" shape-rendering="crispEdges">
 <!--
-  Dot-matrix anarchy mark, in the Synthwave 2077 palette.
+  Dot-matrix anarchy mark, in hesoyam's palette.
 
   The shape is not drawn by hand. It was sampled from the source geometry - a 620x620
   circle r=269 at (310,310) plus the polyline 113,493 311,81 436,337 188,337 436,337
@@ -8,7 +8,7 @@
   least 34% of it. So the dots below are a measurement of that path, not an impression.
   Re-run the sampler with a different N to trade fidelity for legibility at 16px.
 
-  Grid, accent at row 0 col 8 (the one pink dot):
+  Grid, accent at row 0 col 8 (the one red dot):
     ....#####....
     ...#######...
     ..##.###.###.
@@ -25,12 +25,16 @@
 
   Colours are hesoyam's own, sampled from its static/favicon.ico and then moved onto the
   current tokens so the icon and the page cannot drift apart:
-    #111215  --nd-black, the dark page ground
-    #9ca0af  --nd-text-secondary, the dots. The ico used #767676; the token is the same
-              role one step up, and it is the value the page now uses for secondary text
-    #d71921  --nd-accent, the single accent dot. The ico used #c12e34
+    #111215   nd-black, the dark page ground
+    #9ca0af   nd-text-secondary, the dots. The ico used #767676; the token is the same
+              role one step up, and it is what the page now uses for secondary text
+    #d71921   nd-accent, the single accent dot. The ico used #c12e34
+
+  Note for whoever edits this: the token names above are written without their leading
+  dashes on purpose. A double dash is illegal inside an XML comment and it invalidates the
+  whole file, which shows up as a broken image rather than as an error anyone reads.
 -->
   <rect width="40" height="40" fill="#111215"/>
-  <path fill="#9ca0af" d="M13 1h2v2h-2zM16 1h2v2h-2zM19 1h2v2h-2zM22 1h2v2h-2zM10 4h2v2h-2zM13 4h2v2h-2zM16 4h2v2h-2zM19 4h2v2h-2zM22 4h2v2h-2zM25 4h2v2h-2zM28 4h2v2h-2zM7 7h2v2h-2zM10 7h2v2h-2zM16 7h2v2h-2zM19 7h2v2h-2zM22 7h2v2h-2zM28 7h2v2h-2zM31 7h2v2h-2zM34 7h2v2h-2zM4 10h2v2h-2zM7 10h2v2h-2zM16 10h2v2h-2zM19 10h2v2h-2zM22 10h2v2h-2zM31 10h2v2h-2zM34 10h2h-2zM1 13h2v2h-2zM4 13h2v2h-2zM13 13h2v2h-2zM16 13h2v2h-2zM22 13h2v2h-2zM25 13h2v2h-2zM34 13h2v2h-2zM37 13h2v2h-2zM1 16h2v2h-2zM4 16h2v2h-2zM13 16h2v2h-2zM16 16h2v2h-2zM22 16h2v2h-2zM25 16h2v2h-2zM34 16h2v2h-2zM37 16h2v2h-2zM1 19h2v2h-2zM4 19h2v2h-2zM10 19h2v2h-2zM13 19h2v2h-2zM16 19h2v2h-2zM19 19h2v2h-2zM22 19h2v2h-2zM25 19h2v2h-2zM28 19h2v2h-2zM34 19h2v2h-2zM37 19h2v2h-2zM1 22h2v2h-2zM4 22h2v2h-2zM10 22h2v2h-2zM13 22h2v2h-2zM16 22h2v2h-2zM19 22h2v2h-2zM22 22h2v2h-2zM25 22h2v2h-2zM28 22h2v2h-2zM34 22h2v2h-2zM37 22h2v2h-2zM1 25h2v2h-2zM4 25h2v2h-2zM7 25h2v2h-2zM10 25h2v2h-2zM28 25h2v2h-2zM31 25h2v2h-2zM34 25h2v2h-2zM37 25h2v2h-2zM4 28h2v2h-2zM7 28h2v2h-2zM10 28h2v2h-2zM28 28h2v2h-2zM31 28h2v2h-2zM34 28h2v2h-2zM7 31h2v2h-2zM10 31h2v2h-2zM28 31h2v2h-2zM31 31h2v2h-2zM34 31h2v2h-2zM7 34h2v2h-2zM10 34h2v2h-2zM13 34h2v2h-2zM16 34h2v2h-2zM19 34h2v2h-2zM22 34h2v2h-2zM25 34h2v2h-2zM28 34h2v2h-2zM31 34h2v2h-2zM13 37h2v2h-2zM16 37h2v2h-2zM19 37h2v2h-2zM22 37h2v2h-2zM25 37h2v2h-2z"/>
+  <path fill="#9ca0af" d="M13 1h2v2h-2zM16 1h2v2h-2zM19 1h2v2h-2zM22 1h2v2h-2zM10 4h2v2h-2zM13 4h2v2h-2zM16 4h2v2h-2zM19 4h2v2h-2zM22 4h2v2h-2zM25 4h2v2h-2zM28 4h2v2h-2zM7 7h2v2h-2zM10 7h2v2h-2zM16 7h2v2h-2zM19 7h2v2h-2zM22 7h2v2h-2zM28 7h2v2h-2zM31 7h2v2h-2zM34 7h2v2h-2zM4 10h2v2h-2zM7 10h2v2h-2zM16 10h2v2h-2zM19 10h2v2h-2zM22 10h2v2h-2zM31 10h2v2h-2zM34 10h2v2h-2zM1 13h2v2h-2zM4 13h2v2h-2zM13 13h2v2h-2zM16 13h2v2h-2zM22 13h2v2h-2zM25 13h2v2h-2zM34 13h2v2h-2zM37 13h2v2h-2zM1 16h2v2h-2zM4 16h2v2h-2zM13 16h2v2h-2zM16 16h2v2h-2zM22 16h2v2h-2zM25 16h2v2h-2zM34 16h2v2h-2zM37 16h2v2h-2zM1 19h2v2h-2zM4 19h2v2h-2zM10 19h2v2h-2zM13 19h2v2h-2zM16 19h2v2h-2zM19 19h2v2h-2zM22 19h2v2h-2zM25 19h2v2h-2zM28 19h2v2h-2zM34 19h2v2h-2zM37 19h2v2h-2zM1 22h2v2h-2zM4 22h2v2h-2zM10 22h2v2h-2zM13 22h2v2h-2zM16 22h2v2h-2zM19 22h2v2h-2zM22 22h2v2h-2zM25 22h2v2h-2zM28 22h2v2h-2zM34 22h2v2h-2zM37 22h2v2h-2zM1 25h2v2h-2zM4 25h2v2h-2zM7 25h2v2h-2zM10 25h2v2h-2zM28 25h2v2h-2zM31 25h2v2h-2zM34 25h2v2h-2zM37 25h2v2h-2zM4 28h2v2h-2zM7 28h2v2h-2zM10 28h2v2h-2zM28 28h2v2h-2zM31 28h2v2h-2zM34 28h2v2h-2zM7 31h2v2h-2zM10 31h2v2h-2zM28 31h2v2h-2zM31 31h2v2h-2zM34 31h2v2h-2zM7 34h2v2h-2zM10 34h2v2h-2zM13 34h2v2h-2zM16 34h2v2h-2zM19 34h2v2h-2zM22 34h2v2h-2zM25 34h2v2h-2zM28 34h2v2h-2zM31 34h2v2h-2zM13 37h2v2h-2zM16 37h2v2h-2zM19 37h2v2h-2zM22 37h2v2h-2zM25 37h2v2h-2z"/>
   <path fill="#d71921" d="M25 1h2v2h-2z"/>
 </svg>
