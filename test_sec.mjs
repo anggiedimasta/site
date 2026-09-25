@@ -16,9 +16,9 @@ const html = htmlRaw.replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g
 const svg = read("favicon.svg");
 const llms = read("llms.txt");
 const cvRaw = read("data/cv.json");
-const shipped = [".cfignore", ".gitignore", "README.md", "PROFILE.md", "anggiedimasta.jpg",
-  "data/cv.json", "demo.mjs", "favicon.svg", "index.html", "llms.txt", "make_profile.mjs",
-  "search.mjs", "test_search.mjs", "test_sec.mjs", "test_view.mjs"];
+const shipped = [".gitignore", "README.md", "PROFILE.md", "anggiedimasta.jpg",
+  "data/cv.json", "deploy.mjs", "demo.mjs", "favicon.svg", "index.html", "llms.txt",
+  "make_profile.mjs", "search.mjs", "test_search.mjs", "test_sec.mjs", "test_view.mjs"];
 
 // ---- 1. zero third-party subresources. The site's whole claim is that it runs with no server
 // and no bill, which a single remote font or analytics tag would quietly break. Same-origin
@@ -209,25 +209,33 @@ assert.ok(!readdirSync(".").includes("package.json"), "a package.json appeared, 
 assert.ok(!readdirSync(".").includes("package-lock.json"), "a lockfile appeared, so did a dependency tree");
 assert.ok(!readdirSync(".").includes("node_modules"), "node_modules exists, so did a dependency tree");
 
-// ---- 12. wrangler uploads the FOLDER, not the git tree. .gitignore is not consulted, so
-// every file present in the working directory is published unless .cfignore excludes it. That
-// is how a source CV and the leak deny-list reached a public URL once. This is the check that
-// keeps it from happening again: nothing on disk may be untracked AND unexcluded.
-let cfignore;
-try {
-  cfignore = readFileSync(".cfignore", "utf8").split(/\r?\n/).map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
-} catch {
-  assert.fail(".cfignore is missing, so `wrangler pages deploy .` would publish every untracked file in the folder");
+// ---- 12. wrangler pages deploy uploads the WORKING DIRECTORY. It does not read .gitignore,
+// and wrangler 4.141 has no ignore option for pages deploy at all, so .cfignore is silently
+// ignored. A plain `deploy .` therefore publishes every untracked file in the folder, which
+// here means the source CV, two text extracts and .leaklist. That happened and the CV was
+// reachable from a public URL.
+//
+// The fix is not an ignore file, it is a deploy path: deploy.mjs stages `git ls-files` into a
+// temp directory and hands that to wrangler. So the check is that the script exists, builds
+// its staging list from git rather than from the filesystem, and that the README does not
+// tell anyone to run the unsafe command.
+const deploy = read("deploy.mjs");
+assert.ok(/git[^)]*ls-files/.test(deploy), "deploy.mjs must build its file list from git ls-files");
+assert.ok(!/readdirSync\(\s*["']\.["']\s*\)/.test(deploy), "deploy.mjs must not walk the working directory");
+assert.ok(/rmSync|rm -rf/.test(deploy), "deploy.mjs must clean up the staging directory it created");
+for (const v of ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]) {
+  assert.ok(deploy.includes(v), `deploy.mjs never mentions ${v}`);
 }
-// three shapes only, because that is all this file uses: a bare name, a directory, and *.ext
-const excluded = (rel) => cfignore.some((p) => {
-  if (p.startsWith("*.")) return rel.toLowerCase().endsWith(p.slice(1).toLowerCase());
-  if (p.endsWith("/")) return rel.toLowerCase().startsWith(p.toLowerCase());
-  if (p.includes("*")) return new RegExp(`^${p.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`, "i").test(rel);
-  return rel.toLowerCase() === p.toLowerCase();
-});
+// The README has to stop telling people to run the unsafe command. It is allowed to *name*
+// it while warning against it, so the check is scoped to fenced shell blocks - that is where
+// a command becomes something someone copies.
+const readmeShell = [...read("README.md").matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]).join("\n");
+assert.ok(!/wrangler pages deploy \s*\./.test(readmeShell),
+  "the README shows `wrangler pages deploy .` in a shell block. It uploads the working directory. Use deploy.mjs.");
+assert.ok(/node deploy\.mjs/.test(readmeShell), "the README must show the safe deploy command");
 
+// And the state that made this dangerous has to stay visible: there are untracked files in the
+// folder, and every one of them would be published by the unsafe command.
 const onDisk = [];
 (function walk(dir, prefix = "") {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -237,17 +245,9 @@ const onDisk = [];
     else onDisk.push(rel);
   }
 })(".");
-
-const leaks = onDisk.filter((f) => !shipped.includes(f) && !excluded(f));
-assert.equal(leaks.length, 0,
-  `on disk, not tracked by git, and not in .cfignore - a deploy would publish: ${leaks.join(", ")}`);
-const ignoredButShipped = shipped.filter((f) => excluded(f));
-assert.equal(ignoredButShipped.length, 0,
-  `.cfignore excludes a file that is meant to ship: ${ignoredButShipped.join(", ")}`);
-// and the two files that must never be reachable by name have to be named in .cfignore
-for (const must of [".leaklist", ".env"]) {
-  assert.ok(excluded(must), `${must} is not in .cfignore`);
-}
+const untracked = onDisk.filter((f) => !shipped.includes(f));
+assert.ok(untracked.includes(".leaklist"),
+  ".leaklist should be present but untracked - if it is gone, this check has stopped proving anything");
 
 // ---- 13. the things the site tells visitors must be true
 assert.ok(/no server, no model, no bill/.test(html) || /no model calls/i.test(html),

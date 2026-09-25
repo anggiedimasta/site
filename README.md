@@ -36,20 +36,25 @@ python -m http.server 8099                   # then open localhost:8099
 
 ## Deploy
 
-**GitHub, zero commands.** Push to `main`, then in Cloudflare Pages: *Create → Pages →
-Connect to Git*, pick this repo, leave the build command empty and the output directory `/`.
-Every push redeploys. You get a `*.pages.dev` URL immediately; attach the domain later by
-adding one DNS record.
-
-**Manual, if you'd rather not connect Git.**
+Live at **<https://anggiedimasta.pages.dev>**.
 
 ```sh
-npx wrangler login                              # once, opens a browser
-npx wrangler pages deploy . --project-name anggiedimasta-dev
+export CLOUDFLARE_API_TOKEN=...   # dash.cloudflare.com/profile/api-tokens
+export CLOUDFLARE_ACCOUNT_ID=...
+node deploy.mjs
 ```
 
-Wrangler is not installed and is not added to this project — `npx` fetches it on
-demand and caches it outside the folder.
+`deploy.mjs` stages `git ls-files` into a temporary directory and hands *that* to wrangler.
+
+**Do not run `wrangler pages deploy .`.** It uploads the working directory, not the git tree.
+It does not read `.gitignore`, and wrangler has no ignore option for `pages deploy` at all, so
+a plain `deploy .` publishes every untracked file in the folder — which here is the source CV,
+two text extracts, and `.leaklist`. It has already happened once; the CV was reachable from a
+public URL until the project itself was deleted, because the assets live on the project and
+deleting a deployment does not remove them.
+
+`npx` fetches wrangler on demand and caches it outside the folder, so it is not a dependency
+of this project. Attach the domain later by adding one DNS record in Cloudflare.
 
 ## Editing the CV
 
